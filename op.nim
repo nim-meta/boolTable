@@ -34,16 +34,17 @@ import std/critbits
 
 const Sep* = '\t' ## Seperator in table
 
-macro dumpTableVars*(expr: untyped, vars: varargs[untyped]) =
+macro dumpTableVars*(expr: untyped, vars: untyped) =
   ## only treat identifiers in `vars` as variables to list (others as constants)
+  ## `vars` must be in one of set/array/tuple literals
   runnableExamples:
-    dumpTableVars(b -> a, a,b)
+    dumpTableVars(b -> a, [a,b])
     
     echo "\n------------------\n"
     from std/sugar import dump
     var v: bool
     dump v
-    dumpTableVars(b ∨ a ∧ v, a,b)
+    dumpTableVars(b ∨ a ∧ v, [a,b])
     
   template forLoop(v, iterBody): NimNode =
     nnkForStmt.newTree(
@@ -53,6 +54,10 @@ macro dumpTableVars*(expr: untyped, vars: varargs[untyped]) =
   template asInt(b): NimNode =
     newCall ident"int", b
   
+  const varsKinds = {nnkBracket, nnkTupleConstr, nnkCurly}
+  if vars.kind notin varsKinds:
+    error "`vars` is of kind " & $vars.kind & 
+      ", but expect one of " & $varsKinds
   result = newNimNode(nnkStmtList)
   
   var headerPri = newNimNode(nnkCall).add ident"echo"
@@ -124,7 +129,16 @@ macro dumpTable*(expr: untyped) =
     0       1
     1       0
     ]#
+  var call = nnkCall.newTree ident"dumpTableVars"
+  call.add expr
+  
+  let idents = collectVars(expr)
 
+  var collects = newNimNode nnkBracket
+  for s in idents:
+    collects.add ident s
+  call.add collects
+  call
 
 
 when isMainModule: # some tests
@@ -139,5 +153,5 @@ when isMainModule: # some tests
   echo "\n------------------"
   var v: bool
   dump v
-  dumpTableVars(b ∨ a ∧ v, a,b)
+  dumpTableVars(b ∨ a ∧ v, [a,b])
   
