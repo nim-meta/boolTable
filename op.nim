@@ -9,6 +9,14 @@ dumpTable p^q -> r
 ```
 See docuement of `dumpTable <#dumpTable.m%2Cuntyped>`_ for details and demo output.
 
+.. warning:: `¬`, when used as prefix, must be followed by a space, e.g. `¬ true`.\
+    `¬` has the lowest priority, e.g. `¬ a^b` means ¬(a^b).\
+    please use `(¬ expr)` or `¬(expr)` instead
+    
+.. warning:: `→` and `↔` are not in `Unicode Operator`_ lists, so cannot be used as infix operators
+    
+.. _Unicode Operator: https://nim-lang.org/docs/manual.html#lexical-analysis-unicode-operators
+
 ]##
 
 template `~`  *(p):  bool = not p        ## ascii alias for `¬ <#¬.t>`_
@@ -23,11 +31,6 @@ template `∨`*(p,q):  bool = p or q      ## U+2228  `tex: \lor or \vee`
 template `∧`*(p,q):  bool = p and q     ## U+2227  `tex: \and or \wedge`
 template `→`*(p,q):  bool = ¬ p ∨ q     ## U+2192  `tex: \to  or \rightarrow`
 template `↔`*(p,q):  bool = (p→q)∧(q→p) ## U+2194  `tex: \leftrightarrow`
-
-# `¬`, when used as prefix, must be followed by a space, e.g. `¬ true`
-# `→` and `↔` are not in [Unicode Operator][] lists, so cannot be used as infix operators
-#
-# [Unicode Operator]: https://nim-lang.org/docs/manual.html#lexical-analysis-unicode-operators
 
 import std/macros
 import std/critbits
@@ -96,6 +99,9 @@ proc collectVars(res: var CritBitTree[void], expr: NimNode) =
       for i in [1,2]:
         collectVars(res, e[i])
     of nnkCommand, nnkCall:
+      if e.eqIdent"¬" and e.kind == nnkCommand:
+        warning "`¬` has the lowest priority, " &
+          "e.g. `¬ a^b` means ¬(a^b). please use (¬ expr) or ¬(expr) instead"
       for i,v in e:
         if i==0: continue
         collectVars(res, v)
@@ -105,7 +111,7 @@ proc collectVars(expr: NimNode): CritBitTree[void] = collectVars(result, expr)
 
 macro dumpTable*(expr: untyped, sep: static string = Sep) =
   runnableExamples:
-    dumpTable a ∧ ¬ b ∨ c
+    dumpTable a ∧ (¬ b) ∨ c
     echo "\n-----------------\n"
     dumpTable ~foo 
     # if you type `foo || Foo`, there are two variables,
@@ -116,15 +122,15 @@ macro dumpTable*(expr: untyped, sep: static string = Sep) =
     #
     # outputs:
     #[
-    a       b       c       a ∧ ¬ b ∨ c
+    a       b       c       a ∧ (¬ b) ∨ c
     0       0       0       0
-    0       0       1       0
+    0       0       1       1
     0       1       0       0
-    0       1       1       0
+    0       1       1       1
     1       0       0       1
-    1       0       1       0
+    1       0       1       1
     1       1       0       0
-    1       1       1       0
+    1       1       1       1
     
     -----------------
     
@@ -155,7 +161,7 @@ when isMainModule: # some tests
   
   
   echo "\n------------------"
-  dumpTable ¬ a ∧ ¬ b ∨ c #~b ∨ ~c || a
+  dumpTable (¬ a) ∧ (¬ b) ∨ c #~b ∨ ~c || a
 
   echo "\n------------------"
   var v: bool
