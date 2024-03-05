@@ -32,9 +32,10 @@ template `↔`*(p,q):  bool = (p→q)∧(q→p) ## U+2194  `tex: \leftrightarrow
 import std/macros
 import std/critbits
 
-const Sep* = '\t' ## Seperator in table
+const Sep* = "\t" ## seperator in table
 
-macro dumpTableVars*(expr: untyped, vars: untyped) =
+
+macro dumpTableVars*(expr: untyped, vars: untyped, sep: static string=Sep) =
   ## only treat identifiers in `vars` as variables to list (others as constants)
   ## `vars` must be in one of set/array/tuple literals
   runnableExamples:
@@ -62,13 +63,13 @@ macro dumpTableVars*(expr: untyped, vars: untyped) =
   
   var headerPri = newNimNode(nnkCall).add ident"echo"
   for v in vars:
-    headerPri.add newLit($v), newLit(Sep)
+    headerPri.add newLit($v), newLit(sep)
   headerPri.add expr.toStrLit
   result.add headerPri
   
   var itemPri = nnkCall.newTree ident"echo"
   for v in vars:
-    itemPri.add v.asInt, newLit(Sep)
+    itemPri.add v.asInt, newLit(sep)
   itemPri.add expr.asInt
   
   var iterBody = itemPri
@@ -102,7 +103,7 @@ proc collectVars(res: var CritBitTree[void], expr: NimNode) =
 
 proc collectVars(expr: NimNode): CritBitTree[void] = collectVars(result, expr)
 
-macro dumpTable*(expr: untyped) =
+macro dumpTable*(expr: untyped, sep: static string = Sep) =
   runnableExamples:
     dumpTable a ∧ ¬ b ∨ c
     echo "\n-----------------\n"
@@ -111,6 +112,8 @@ macro dumpTable*(expr: untyped) =
     #  while foo <=> foO, as in Nim 
     #  only the first alpha's case matters
     
+    # the default sep is "\t"
+    #
     # outputs:
     #[
     a       b       c       a ∧ ¬ b ∨ c
@@ -138,6 +141,10 @@ macro dumpTable*(expr: untyped) =
   for s in idents:
     collects.add ident s
   call.add collects
+  call.add nnkExprEqExpr.newTree(
+    ident"sep", newLit(sep)
+  )
+  echo call.repr
   call
 
 
