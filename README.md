@@ -11,7 +11,7 @@ generates code to print bool truth table.
 In heady:
 
 ```Nim
-dumpTable a^b
+dumpTable a^b # or `a ∧ b` (Unicode alternative)
 ```
 
 Output:
@@ -24,6 +24,8 @@ a       b       a ^ b
 ```
 
 ## advanced
+
+### make up
 What if want a html output as a string?
 
 Here you are:
@@ -36,4 +38,36 @@ s.add "</ul>"
 echo s
 ```
 
+### Unicode op
 
+```Nim
+dumpTable: a ∧ (¬ b) ∨ c
+```
+
+Output:
+
+```
+a       b       c       a ∧ (¬ b) ∨ c
+0       0       0       0
+0       0       1       1
+0       1       0       0
+0       1       1       1
+1       0       0       1
+1       0       1       1
+1       1       0       0
+1       1       1       1
+```
+
+### Nim's op
+
+As it's in Nim, you're free to use every Nim expression.
+
+> As it's done at compilation, nothing about secure problems
+
+```Nim
+proc foo(a: bool): bool =
+  echo "here is in foo func"
+  a
+
+dumpTable: ¬ foo(a)
+```
