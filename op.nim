@@ -58,19 +58,24 @@ macro writeTableVars*(target: untyped, expr, vars: untyped,
       ", but expect one of " & $varsKinds
   result = newNimNode(nnkStmtList)
   
-  var headerPri = newNimNode(nnkCall).add ident"echo"
-  for v in vars:
-    headerPri.add newLit($v), newLit(sep)
-  headerPri.add expr.toStrLit
-  result.add headerPri
-  
-  var itemPri =
+  let
+    sepLit = newLit sep
+    endlLit = newLit endl
+  var pri =
     if target.kind in {nnkCall, nnkCommand}: target
     else: nnkCall.newTree target
+  var headerPri = pri.copy()
   for v in vars:
-    itemPri.add v.asInt, newLit(sep)
+    headerPri.add newLit($v), sepLit
+  headerPri.add expr.toStrLit
+  if endl!="": headerPri.add endlLit
+  result.add headerPri
+  
+  var itemPri = pri
+  for v in vars:
+    itemPri.add v.asInt, sepLit
   itemPri.add expr.asInt
-  if endl!="": itemPri.add newLit(endl)
+  if endl!="": itemPri.add endlLit
   
   var iterBody = itemPri
   for i in countdown(vars.len-1,0):
@@ -121,10 +126,9 @@ proc collectVars(res: var CritBitTree[void], expr: NimNode) =
 
 proc collectVars(expr: NimNode): CritBitTree[void] = collectVars(result, expr)
 
-macro writeTable*(target: untyped, expr: untyped, 
-    sep: static string = Sep, endl: static string = Endl) =
-  ## `target` shall be a callable that accepts `varargs[string]`
-  var call = nnkCall.newTree ident"writeTableVars"
+
+template wrapVars(target: untyped, targetVars: NimNode): NimNode =
+  var call = nnkCall.newTree targetVars
   call.add target, expr
   
   let idents = collectVars(expr)
@@ -140,6 +144,11 @@ macro writeTable*(target: untyped, expr: untyped,
     ident"endl", newLit(endl)
   )
   call
+  
+macro writeTable*(target: untyped, expr: untyped, 
+    sep: static string = Sep, endl: static string = Endl) =
+  ## `target` shall be a callable that accepts `varargs[string]`
+  wrapVars target, ident"writeTableVars"
 
 macro dumpTable*(expr: untyped, sep: static string = Sep) =
   ## dump table to stdout with "\n" as `endl`.
@@ -176,7 +185,7 @@ macro dumpTable*(expr: untyped, sep: static string = Sep) =
     ]#
   quote do:
     writeTable(echo, `expr`, sep=`sep`, endl="")
-
+ 
 when isMainModule: # some tests
   from std/sugar import dump
   dump: ¬ true
