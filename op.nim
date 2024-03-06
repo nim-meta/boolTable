@@ -17,6 +17,10 @@ See docuement of `dumpTable <#dumpTable.m%2Cuntyped>`_ for details and demo outp
     
 .. _Unicode Operator: https://nim-lang.org/docs/manual.html#lexical-analysis-unicode-operators
 
+
+.. note:: in `expr` param: if you type `foo || Foo`, there are two variables,\
+     while foo <=> foO, as in Nim \
+     only the first alpha's case matters.
 ]##
 
 template `~`  *(p):  bool = not p        ## ascii alias for `¬ <#¬.t>`_
@@ -36,8 +40,8 @@ import std/macros
 import std/critbits
 
 const
-  Sep* = "\t" ## seperator in table
-  Endl* = "\n"
+  Sep* = "\t" ## default seperator in table
+  Endl* = "\n" ## default endline in table
 
 macro writeTableVars*(target: untyped, expr, vars: untyped, 
     sep: static string = Sep, endl: static string = Endl) =
@@ -98,6 +102,23 @@ macro dumpTableVars*(expr: untyped, vars: untyped, sep: static string=Sep) =
   quote do:
     writeTableVars(echo, `expr`, `vars`, sep=`sep`, endl="")
 
+macro strTableVars*(strVar: typed, expr: untyped, vars: untyped, 
+    sep: static string = Sep, endl: static string = Endl) =
+  runnableExamples:
+    var s: string
+    strTableVars(s, a^b,[a,b])
+    echo s
+  let resSym = strVar
+  var body = newNimNode nnkStmtList
+  let templSym = genSym nskTemplate
+  body.add quote do:
+    template `templSym`(xs: varargs[string]) =
+      for x in xs:
+        `resSym`.add x
+  body.add quote do:
+    writeTableVars `templSym`,`expr`,`vars`,sep=`sep`,endl=`endl`
+  body
+
 proc collectVars(res: var CritBitTree[void], expr: NimNode) =
   template chkAdd(e: NimNode) =
       let s = $e
@@ -157,11 +178,6 @@ macro dumpTable*(expr: untyped, sep: static string = Sep) =
   ##  for doc of other params
   runnableExamples:
     dumpTable a ∧ (¬ b) ∨ c
-    echo "\n-----------------\n"
-    dumpTable ~foo 
-    # if you type `foo || Foo`, there are two variables,
-    #  while foo <=> foO, as in Nim 
-    #  only the first alpha's case matters
     
     # the default sep is "\t"
     #
@@ -176,16 +192,20 @@ macro dumpTable*(expr: untyped, sep: static string = Sep) =
     1       0       1       1
     1       1       0       0
     1       1       1       1
-    
-    -----------------
-    
-    foo     ~foo
-    0       1
-    1       0
     ]#
   quote do:
     writeTable(echo, `expr`, sep=`sep`, endl="")
- 
+
+macro strTable*(strVar: typed, expr: untyped, 
+    sep: static string = Sep, endl: static string = Endl) =
+  runnableExamples:
+    when defined(nimPreviewSlimSystem): import std/assertions
+    var s: string
+    strTable(s, a^b, sep=" ", endl="<br>")
+    assert s=="a b a ^ b<br>0 0 0<br>0 1 0<br>1 0 0<br>1 1 1<br>",
+      "please note the space between infix operator"
+  wrapVars strVar,ident"strTableVars"
+
 when isMainModule: # some tests
   from std/sugar import dump
   dump: ¬ true
