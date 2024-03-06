@@ -41,7 +41,10 @@ const
 
 macro writeTableVars*(target: untyped, expr, vars: untyped, 
     sep: static string = Sep, endl: static string = Endl) =
-  ## `target` shall be a callable that accepts `varargs[string]`
+  ## `target` shall be a callable that accepts `varargs[string]`.
+  ## 
+  ## `vars` must be in one of set/array/tuple literals, 
+  ## only treat identifiers in `vars` as variables to list (others as constants).
   template forLoop(v, iterBody): NimNode =
     nnkForStmt.newTree(
       v, nnkBracket.newNimNode.add(newLit(false),newLit(true)), # for `v` in [false, true]
@@ -76,8 +79,9 @@ macro writeTableVars*(target: untyped, expr, vars: untyped,
   result.add iterBody
 
 macro dumpTableVars*(expr: untyped, vars: untyped, sep: static string=Sep) =
-  ## only treat identifiers in `vars` as variables to list (others as constants)
-  ## `vars` must be in one of set/array/tuple literals
+  ## dump table to stdout with "\n" as `endl`.
+  ## 
+  ## See `writeTableVars<#writeTableVars.m%2Cuntyped%2Cuntyped%2Cuntyped%2Cstaticstring%2Cstaticstring>`_ for doc of other params
   runnableExamples:
     dumpTableVars(b -> a, [a,b])
     
@@ -138,6 +142,10 @@ macro writeTable*(target: untyped, expr: untyped,
   call
 
 macro dumpTable*(expr: untyped, sep: static string = Sep) =
+  ## dump table to stdout with "\n" as `endl`.
+  ## 
+  ## See `writeTable<#writeTable.m%2Cuntyped%2Cuntyped%2Cstaticstring%2Cstaticstring>`_
+  ##  for doc of other params
   runnableExamples:
     dumpTable a ∧ (¬ b) ∨ c
     echo "\n-----------------\n"
