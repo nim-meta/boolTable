@@ -35,29 +35,20 @@ template `↔`*(p,q):  bool = (p→q)∧(q→p) ## U+2194  `tex: \leftrightarrow
 import std/macros
 import std/critbits
 
-const Sep* = "\t" ## seperator in table
+const
+  Sep* = "\t" ## seperator in table
+  Endl* = "\n"
 
-
-macro dumpTableVars*(expr: untyped, vars: untyped, sep: static string=Sep) =
-  ## only treat identifiers in `vars` as variables to list (others as constants)
-  ## `vars` must be in one of set/array/tuple literals
-  runnableExamples:
-    dumpTableVars(b -> a, [a,b])
-    
-    echo "\n------------------\n"
-    from std/sugar import dump
-    var v: bool
-    dump v
-    dumpTableVars(b ∨ a ∧ v, [a,b])
-    
+macro writeTableVars*(target: untyped, expr, vars: untyped, 
+    sep: static string = Sep, endl: static string = Endl) =
+  ## `target` shall be a callable that accepts `varargs[string]`
   template forLoop(v, iterBody): NimNode =
     nnkForStmt.newTree(
       v, nnkBracket.newNimNode.add(newLit(false),newLit(true)), # for `v` in [false, true]
       iterBody
     )
   template asInt(b): NimNode =
-    newCall ident"int", b
-  
+    newCall(ident"$", newCall(ident"int", b))
   const varsKinds = {nnkBracket, nnkTupleConstr, nnkCurly}
   if vars.kind notin varsKinds:
     error "`vars` is of kind " & $vars.kind & 
@@ -70,17 +61,34 @@ macro dumpTableVars*(expr: untyped, vars: untyped, sep: static string=Sep) =
   headerPri.add expr.toStrLit
   result.add headerPri
   
-  var itemPri = nnkCall.newTree ident"echo"
+  var itemPri =
+    if target.kind in {nnkCall, nnkCommand}: target
+    else: nnkCall.newTree target
   for v in vars:
     itemPri.add v.asInt, newLit(sep)
   itemPri.add expr.asInt
+  if endl!="": itemPri.add newLit(endl)
   
   var iterBody = itemPri
   for i in countdown(vars.len-1,0):
     let v = vars[i]
     iterBody = forLoop(v, iterBody)
   result.add iterBody
+
+macro dumpTableVars*(expr: untyped, vars: untyped, sep: static string=Sep) =
+  ## only treat identifiers in `vars` as variables to list (others as constants)
+  ## `vars` must be in one of set/array/tuple literals
+  runnableExamples:
+    dumpTableVars(b -> a, [a,b])
     
+    echo "\n------------------\n"
+    from std/sugar import dump
+    var v: bool
+    dump v
+    dumpTableVars(b ∨ a ∧ v, [a,b])
+  quote do:
+    writeTableVars(echo, `expr`, `vars`, sep=`sep`, endl="")
+
 proc collectVars(res: var CritBitTree[void], expr: NimNode) =
   template chkAdd(e: NimNode) =
       let s = $e
@@ -108,6 +116,26 @@ proc collectVars(res: var CritBitTree[void], expr: NimNode) =
     else: discard
 
 proc collectVars(expr: NimNode): CritBitTree[void] = collectVars(result, expr)
+
+macro writeTable*(target: untyped, expr: untyped, 
+    sep: static string = Sep, endl: static string = Endl) =
+  ## `target` shall be a callable that accepts `varargs[string]`
+  var call = nnkCall.newTree ident"writeTableVars"
+  call.add target, expr
+  
+  let idents = collectVars(expr)
+
+  var collects = newNimNode nnkBracket
+  for s in idents:
+    collects.add ident s
+  call.add collects
+  call.add nnkExprEqExpr.newTree(
+    ident"sep", newLit(sep)
+  )
+  call.add nnkExprEqExpr.newTree(
+    ident"endl", newLit(endl)
+  )
+  call
 
 macro dumpTable*(expr: untyped, sep: static string = Sep) =
   runnableExamples:
@@ -138,21 +166,8 @@ macro dumpTable*(expr: untyped, sep: static string = Sep) =
     0       1
     1       0
     ]#
-  var call = nnkCall.newTree ident"dumpTableVars"
-  call.add expr
-  
-  let idents = collectVars(expr)
-
-  var collects = newNimNode nnkBracket
-  for s in idents:
-    collects.add ident s
-  call.add collects
-  call.add nnkExprEqExpr.newTree(
-    ident"sep", newLit(sep)
-  )
-  echo call.repr
-  call
-
+  quote do:
+    writeTable(echo, `expr`, sep=`sep`, endl="")
 
 when isMainModule: # some tests
   from std/sugar import dump
