@@ -19,6 +19,20 @@ a       b       a ^ b
 1       1       1
 """
 
+test "Nim op":
+  var cnt = 0
+  proc foo(a: bool): bool =
+    cnt.inc
+    a
+  var s: string
+  strTableVars s, ¬ foo(a), [a], sep = "       "
+  check s == """
+a       ¬ foo(a)
+0       1
+1       0
+"""
+  check cnt == 2
+
 test "multi op":
   var s: string
   strTable(s, a->(b->c), sep="       ")

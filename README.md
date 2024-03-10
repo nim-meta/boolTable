@@ -65,9 +65,10 @@ As it's in Nim, you're free to use every Nim expression.
 > As it's done at compilation, nothing about secure problems
 
 ```Nim
+var cnt = 0
 proc foo(a: bool): bool =
-  echo "here is in foo func"
+  cnt.inc
   a
-
-dumpTable: ¬ foo(a)
+dumpTableVars ¬ foo(a), [a]
+echo cnt == 2
 ```
