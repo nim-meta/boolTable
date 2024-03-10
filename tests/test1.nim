@@ -18,3 +18,18 @@ a       b       a ^ b
 1       0       0
 1       1       1
 """
+
+test "multi op":
+  var s: string
+  strTable(s, a->(b->c), sep="       ")
+  check s == """
+a       b       c       a -> (b -> c)
+0       0       0       1
+0       0       1       1
+0       1       0       1
+0       1       1       1
+1       0       0       1
+1       0       1       1
+1       1       0       0
+1       1       1       1
+"""
