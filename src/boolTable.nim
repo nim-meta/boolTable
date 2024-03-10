@@ -7,6 +7,22 @@ for example,
 ```Nim
 dumpTable p^q -> r
 ```
+
+Wanna to calcuate results read from files?
+
+No problem!
+Every macro/template's `expr` param can accept
+ not only expr, but also string literals
+
+So, fine to write something like:
+```Nim
+import std/macros
+macro dumpTableFrom(fn: static string) =
+  const exprStr = slurp fn
+  quote do:
+    dumpTable `exprStr`
+```
+
 See docuement of `dumpTable <#dumpTable.m%2Cuntyped>`_ for details and demo output.
 
 .. warning:: `¬`, when used as prefix, must be followed by a space, e.g. `¬ true`.\
@@ -43,6 +59,10 @@ const
   Sep* = "\t" ## default seperator in table
   Endl* = "\n" ## default endline in table
 
+template normAsExpr(n: NimNode): NimNode =
+  if n.kind == nnkStrLit: parseExpr n.strVal
+  else: n
+
 macro writeTableVars*(target: untyped, expr, vars: untyped, 
     sep: static string = Sep, endl: static string = Endl) =
   ## `target` shall be a callable that accepts `varargs[string]`.
@@ -71,14 +91,16 @@ macro writeTableVars*(target: untyped, expr, vars: untyped,
   var headerPri = pri.copy()
   for v in vars:
     headerPri.add newLit($v), sepLit
-  headerPri.add expr.toStrLit
+  
+  let nexpr = normAsExpr expr
+  headerPri.add nexpr.toStrLit
   if endl!="": headerPri.add endlLit
   result.add headerPri
   
   var itemPri = pri
   for v in vars:
     itemPri.add v.asInt, sepLit
-  itemPri.add expr.asInt
+  itemPri.add nexpr.asInt
   if endl!="": itemPri.add endlLit
   
   var iterBody = itemPri
@@ -126,14 +148,15 @@ template tableStrVars*(expr: untyped, vars: untyped,
   res
 
 proc collectVars(res: var CritBitTree[void], expr: NimNode) =
+  let nexpr = expr.normAsExpr
   template chkAdd(e: NimNode) =
       let s = $e
       if s[0] in {'a'..'z', 'A'..'Z'}:
         res.incl s
-  if expr.kind == nnkIdent:
-    chkAdd expr
+  if nexpr.kind == nnkIdent:
+    chkAdd nexpr
     return
-  for e in expr:
+  for e in nexpr:
     case e.kind
     of nnkIdent:
       chkAdd e

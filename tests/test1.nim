@@ -47,3 +47,7 @@ a       b       c       a -> (b -> c)
 1       1       0       0
 1       1       1       1
 """
+
+test "strlit as arg":
+  check tableStr("a^b") == tableStr a^b
+  check tableStrVars("~a", [a]) == tableStrVars(~a, [a])
