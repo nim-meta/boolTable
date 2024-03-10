@@ -119,6 +119,12 @@ macro strTableVars*(strVar: typed, expr: untyped, vars: untyped,
     writeTableVars `templSym`,`expr`,`vars`,sep=`sep`,endl=`endl`
   body
 
+template tableStrVars*(expr: untyped, vars: untyped, 
+    sep: static string = Sep, endl: static string = Endl): string =
+  var res: string
+  strTableVars(res, expr, vars, sep, endl)
+  res
+
 proc collectVars(res: var CritBitTree[void], expr: NimNode) =
   template chkAdd(e: NimNode) =
       let s = $e
@@ -209,6 +215,12 @@ macro strTable*(strVar: typed, expr: untyped,
     assert s=="a b a ^ b<br>0 0 0<br>0 1 0<br>1 0 0<br>1 1 1<br>",
       "please note the space between infix operator"
   wrapVars strVar,ident"strTableVars"
+
+template tableStr*(expr: untyped, 
+    sep: static string = Sep, endl: static string = Endl): string =
+  var res: string
+  strTable(res, expr, sep, endl)
+  res
 
 when isMainModule: # some tests
   from std/sugar import dump

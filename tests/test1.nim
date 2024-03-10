@@ -8,10 +8,12 @@
 import unittest
 
 import boolTable
+
+const Sep = "       " # powershell or bash render a '\t' as 7 spaces
+
 test "strTable":
-  var s: string
-  strTable s, a^b, sep="       "
-  check  s == """
+  check:
+    tableStr(a^b, sep=Sep) == """
 a       b       a ^ b
 0       0       0
 0       1       0
@@ -24,9 +26,8 @@ test "Nim op":
   proc foo(a: bool): bool =
     cnt.inc
     a
-  var s: string
-  strTableVars s, ¬ foo(a), [a], sep = "       "
-  check s == """
+  check:
+    tableStrVars(¬ foo(a), [a], sep=Sep) == """
 a       ¬ foo(a)
 0       1
 1       0
@@ -34,9 +35,8 @@ a       ¬ foo(a)
   check cnt == 2
 
 test "multi op":
-  var s: string
-  strTable(s, a->(b->c), sep="       ")
-  check s == """
+  check:
+    tableStr(a->(b->c), sep=Sep) == """
 a       b       c       a -> (b -> c)
 0       0       0       1
 0       0       1       1
