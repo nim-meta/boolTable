@@ -45,6 +45,8 @@ template `^`  *(p,q):bool = p and q      ## ascii alias for `∧ <#∧.t%2C%2C>`
 template `->` *(p,q):bool = (not p) or q ## ascii alias for `→ <#→.t%2C%2C>`_
 template `<->`*(p,q):bool = (p->q)^(q->p)## ascii alias for `↔ <#↔.t%2C%2C>`_
 
+template `\/` *(p,q):bool = p or q       ## ascii alias for `∨ <#∨.t%2C%2C>`_
+template `/\` *(p,q):bool = p and q      ## ascii alias for `∧ <#∧.t%2C%2C>`_
 
 template `¬`*(p):    bool = not p       ## U+00AC  `tex: \neg`
 template `∨`*(p,q):  bool = p or q      ## U+2228  `tex: \lor or \vee`
