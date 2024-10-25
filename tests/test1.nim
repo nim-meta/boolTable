@@ -34,6 +34,16 @@ a       ¬ foo(a)
 """
   check cnt == 2
 
+test "and/or/not op":
+  check:
+    tableStr(a and b, sep=Sep) == """
+a       b       a and b
+0       0       0
+0       1       0
+1       0       0
+1       1       1
+"""
+
 test "multi op":
   check:
     tableStr(a->(b->c), sep=Sep) == """

@@ -153,7 +153,8 @@ proc collectVars(res: var CritBitTree[void], expr: NimNode) =
   let nexpr = expr.normAsExpr
   template chkAdd(e: NimNode) =
       let s = $e
-      if s[0] in {'a'..'z', 'A'..'Z'}:
+      if s[0] in {'a'..'z', 'A'..'Z'} and
+          s not_in ["and", "or", "xor", "not"]:
         res.incl s
   if nexpr.kind == nnkIdent:
     chkAdd nexpr
