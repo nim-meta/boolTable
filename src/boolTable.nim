@@ -175,8 +175,7 @@ proc collectVars(res: var CritBitTree[void], expr: NimNode) =
         if i==0: continue
         collectVars(res, v)
     of nnkPar:
-      for i in [1,2]:
-        collectVars(res, e[0][i])
+      collectVars(res, e[0])
 
     else: discard
 
