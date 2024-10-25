@@ -55,6 +55,17 @@ template `∧`*(p, q: bool): bool = p and q     ## U+2227  `tex: \and or \wedge`
 template `→`*(p, q: bool): bool = ¬ p ∨ q     ## U+2192  `tex: \to  or \rightarrow`
 template `↔`*(p, q: bool): bool = p==q        ## U+2194  `tex: \leftrightarrow`,\
 ## `(p→q)∧(q→p)` in math, `p==q` in programming
+const allowDigitalLogicOps*{.boolDefine.} = false  ## In digital logic, \
+## `p+q` is written instead of `p or q`, etc.
+## this options is disabled by default.
+## You can define it to auto-import `digitalLogicOps` module.
+## Or import `boolTable/digitalLogicOps` manually (recommended).
+when allowDigitalLogicOps:
+  import ./boolTable/digitalLogicOps
+  export digitalLogicOps
+
+runnableExamples "-d:allowDigitalLogicOps":
+    dumpTable (A+B)*(A⊕B)
 
 import std/macros
 import std/critbits
