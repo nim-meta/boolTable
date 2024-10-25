@@ -56,6 +56,8 @@ template `↔`*(p,q):  bool = (p→q)∧(q→p) ## U+2194  `tex: \leftrightarrow
 
 import std/macros
 import std/critbits
+from std/strutils import nimIdentNormalize
+import std/sets
 
 const
   Sep* = "\t" ## default seperator in table
@@ -149,12 +151,21 @@ template tableStrVars*(expr: untyped, vars: untyped,
   strTableVars(res, expr, vars, sep, endl)
   res
 
+const WordBinaryOps = toHashSet [  ## binary op but in form of word
+  "and", "or", "xor", "not",
+  "shl", "shr",
+  "div", "mod",
+  "in", "notin".nimIdentNormalize,
+  "is", "isnot".nimIdentNormalize, "of",
+]
+#StringTableMode.modeStyleInsensitive)
+
 proc collectVars(res: var CritBitTree[void], expr: NimNode) =
   let nexpr = expr.normAsExpr
   template chkAdd(e: NimNode) =
       let s = $e
       if s[0] in {'a'..'z', 'A'..'Z'} and
-          s not_in ["and", "or", "xor", "not"]:
+          s.nimIdentNormalize not_in WordBinaryOps:
         res.incl s
   if nexpr.kind == nnkIdent:
     chkAdd nexpr
