@@ -39,21 +39,21 @@ See docuement of `dumpTable <#dumpTable.m%2Cuntyped>`_ for details and demo outp
      only the first alpha's case matters.
 ]##
 
-template `~`  *(p):  bool = not p        ## ascii alias for `¬ <#¬.t>`_
-template `||` *(p,q):bool = p or q       ## ascii alias for `∨ <#∨.t%2C%2C>`_
-template `^`  *(p,q):bool = p and q      ## ascii alias for `∧ <#∧.t%2C%2C>`_
-template `->` *(p,q):bool = (not p) or q ## ascii alias for `→ <#→.t%2C%2C>`_
-template `<->`*(p,q):bool = p==q         ## ascii alias for `↔ <#↔.t%2C%2C>`_, \
+template `~`  *(p: bool):   bool = not p        ## ascii alias for `¬`_
+template `||` *(p, q: bool):bool = p or q       ## ascii alias for `∨`_
+template `^`  *(p, q: bool):bool = p and q      ## ascii alias for `∧`_
+template `->` *(p, q: bool):bool = (not p) or q ## ascii alias for `→`_
+template `<->`*(p, q: bool):bool = p==q         ## ascii alias for `↔`_, \
 ## `(p->q)^(q->p)` in math, `p==q` in programming
 
-template `\/` *(p,q):bool = p or q       ## ascii alias for `∨ <#∨.t%2C%2C>`_
-template `/\` *(p,q):bool = p and q      ## ascii alias for `∧ <#∧.t%2C%2C>`_
+template `\/` *(p,q: bool):bool = p or q       ## ascii alias for `∨`_
+template `/\` *(p,q: bool):bool = p and q      ## ascii alias for `∧`_
 
-template `¬`*(p):    bool = not p       ## U+00AC  `tex: \neg`
-template `∨`*(p,q):  bool = p or q      ## U+2228  `tex: \lor or \vee`
-template `∧`*(p,q):  bool = p and q     ## U+2227  `tex: \and or \wedge`
-template `→`*(p,q):  bool = ¬ p ∨ q     ## U+2192  `tex: \to  or \rightarrow`
-template `↔`*(p,q):  bool = p==q        ## U+2194  `tex: \leftrightarrow`,\
+template `¬`*(p: bool):    bool = not p       ## U+00AC  `tex: \neg`
+template `∨`*(p, q: bool): bool = p or q      ## U+2228  `tex: \lor or \vee`
+template `∧`*(p, q: bool): bool = p and q     ## U+2227  `tex: \and or \wedge`
+template `→`*(p, q: bool): bool = ¬ p ∨ q     ## U+2192  `tex: \to  or \rightarrow`
+template `↔`*(p, q: bool): bool = p==q        ## U+2194  `tex: \leftrightarrow`,\
 ## `(p→q)∧(q→p)` in math, `p==q` in programming
 
 import std/macros
